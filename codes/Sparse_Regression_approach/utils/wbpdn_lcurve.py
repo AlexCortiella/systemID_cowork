@@ -98,7 +98,7 @@ def menger(P1, P2, P3):
 
     return 2 * (v[0] * u[1] - u[0] * v[1]) / ( norm(u) * norm(v) * norm(u - v) )
 
-def check_lambdas(lambda_min, lambda_max, X, y, w = None, tol = 1e-8):
+def check_lambdas(lambda_min, lambda_max, X, y, w = None, tol = 1e-8, verbose = False):
     
 #     #Make sure that the solver does not fail for the range of lambdas 
 #     while True:
@@ -130,13 +130,17 @@ def check_lambdas(lambda_min, lambda_max, X, y, w = None, tol = 1e-8):
     
     #Make sure the residuals are not too small to help lcurve_corner converge
     while residual_min < tol:
-        print('lambda_min too small. Increasing it 10 times...')
+        if verbose:
+            print('lambda_min too small. Increasing it 10 times...')
+            
         lambda_min = lambda_min * 10
         bpdn = solveBP(X, y, w, lambda_reg = lambda_min)
         residual_min, reg_residual_max = bpdn[1]
 
     while reg_residual_min < tol:
-        print('lambda_max too large. Reducing it 10 times...')
+        if verbose:
+            print('lambda_max too large. Reducing it 10 times...')
+            
         lambda_max = lambda_max / 10
         bpdn = solveBP(X, y, w, lambda_reg = lambda_max)
         residual_max, reg_residual_min = bpdn[1]
@@ -180,7 +184,7 @@ def lcurve_corner(X, y, w = None, lambda_min = 1e-10, lambda_max = 1e10, epsilon
     lambda_itr = []
 
     #Check the range of lambdas and compute normalization coefficients
-    lambda_max, lambda_min = check_lambdas(lambda_min, lambda_max, X, y, w, tol)
+    lambda_max, lambda_min = check_lambdas(lambda_min, lambda_max, X, y, w, tol, verbose)
 
     lambda_vec = np.array([lambda_min, lambda_max, 0, 0])
 
@@ -291,7 +295,8 @@ def lcurve_corner(X, y, w = None, lambda_min = 1e-10, lambda_max = 1e10, epsilon
         gap = ( lambda_vec[3] - lambda_vec[0] ) / lambda_vec[3]
 
         if gap < epsilon:
-            print(f'  Convergence criterion reached in {itr} iterations.')
+            if verbose:
+                print(f'  Convergence criterion reached in {itr} iterations.')
 
         lambda_itr.append(current_lambda)
         
@@ -305,7 +310,8 @@ def lcurve_corner(X, y, w = None, lambda_min = 1e-10, lambda_max = 1e10, epsilon
         itr += 1
 
         if itr == max_iter:
-            print(f'  Maximum number of {itr} iterations reached.')
+            if verbose:
+                print(f'  Maximum number of {itr} iterations reached.')
 
     #Solve for optimal lambda
     bpdn = solveBP(X, y, w, lambda_reg = current_lambda, verbose = verbose)
@@ -330,7 +336,7 @@ def full_lcurve(X, y, w = None, lambda_min = 1e-10, lambda_max = 1e10, n_lambdas
     reg_residual_lc = np.zeros(n_lambdas)
     
     #Check the range of lambdas and compute normalization coefficients
-    lambda_max, lambda_min = check_lambdas(lambda_min, lambda_max, X, y, w, tol)
+    lambda_max, lambda_min = check_lambdas(lambda_min, lambda_max, X, y, w, tol, verbose)
     
     #Generate array of lambdas
     lambdas = np.logspace(np.log10(lambda_min), np.log10(lambda_max), n_lambdas)
